@@ -1,17 +1,25 @@
 import web
 
 render = web.template.render('mvc/views/')
-session = web.session.Session(app, web.session.DiskStore('sessions'))
-
-session.username = ""
-session.password = ""
 
 class Login:
     def GET(self):
-        if session.username == "usuario" and session.password == "1234":
-            render.welcome(session.username, session.password)
-        else:
-            return render.index()
+        try:
+            cookie = web.cookies()
+            if cookie.get("username"):
+                username = cookie.get("username")
+                password = cookie.get("password")
+
+                if username == "usuario" and password == "1234":
+                    raise web.seeother('/login')
+
+                else:
+                    return render.index()
+            else:
+                return render.index()
+
+        except Exception as e:
+            return "Error" + str(e.args)
 
     def POST(self):
         input_data = web.input()
@@ -19,13 +27,10 @@ class Login:
         username = input_data.username
         password = input_data.password
 
-        session.username = username
-        session.password = password
+        web.setcookie("username", username, expires="", domain=None)
+        web.setcookie("password", password, expires="", domain=None)
 
-        if session.username == "usuario" and session.password == "1234":
-            return render.welcome(session.username, session.password)
-        else:
-            return render.index()
+        return render.index()
 
         
 
